@@ -1,13 +1,24 @@
 import { Chess, Square, ChessInstance, Move } from "chess.js";
 import Chessboard from "chessboardjsx";
-import { CSSProperties, useState } from "react";
+import { useState } from "react";
 
 const App = () => {
   const [game] = useState<ChessInstance>(() => new Chess());
   const [fen, setFen] = useState("start");
   const [squareStyles, setSquareStyles] =
-    useState<{ [square in Square]?: CSSProperties }>();
+    useState<Chessboard["props"]["squareStyles"]>();
   const [history, setHistory] = useState<Move[]>([]);
+
+  const ai = () => {
+    const possibleMoves = game.moves();
+
+    // game over
+    if (possibleMoves.length === 0) return;
+
+    var randomIdx = Math.floor(Math.random() * possibleMoves.length);
+    game.move(possibleMoves[randomIdx]);
+    setFen(game.fen());
+  };
 
   // show possible moves
   const highlightSquare = (
@@ -55,6 +66,8 @@ const App = () => {
     setFen(game.fen());
     setHistory(game.history({ verbose: true }));
     setSquareStyles(squareStyling(history));
+
+    setTimeout(ai, 1000);
   };
 
   const onMouseOverSquare = (square: Square) => {
