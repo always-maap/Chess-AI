@@ -1,0 +1,4 @@
+#root:first-child {
+  display: flex;
+  justify-content: center;
+}
