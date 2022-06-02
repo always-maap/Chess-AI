@@ -2,6 +2,15 @@ import { Chess, Square, ChessInstance, Move } from "chess.js";
 import Chessboard from "chessboardjsx";
 import { useState } from "react";
 
+const pieceValue = {
+  p: 10, // pawn
+  n: 30, // knight
+  b: 30, // bishop
+  r: 50, // rook
+  q: 90, // queen
+  k: 900, // king
+};
+
 const App = () => {
   const [game] = useState<ChessInstance>(() => new Chess());
   const [fen, setFen] = useState("start");
@@ -11,13 +20,40 @@ const App = () => {
 
   const ai = () => {
     const possibleMoves = game.moves();
+    let bestValue = -Infinity;
+    let bestMove = -1;
 
     // game over
     if (possibleMoves.length === 0) return;
 
-    var randomIdx = Math.floor(Math.random() * possibleMoves.length);
-    game.move(possibleMoves[randomIdx]);
+    possibleMoves.forEach((_, i) => {
+      game.move(possibleMoves[i]);
+
+      const boardValue = -getBoardValue();
+      game.undo();
+
+      if (boardValue > bestValue) {
+        bestValue = boardValue;
+        bestMove = i;
+      }
+    });
+
+    game.move(possibleMoves[bestMove]);
     setFen(game.fen());
+  };
+
+  const getBoardValue = () => {
+    let totalValue = 0;
+    const board = game.board();
+    for (let i = 0; i < 8; i++) {
+      for (let j = 0; j < 8; j++) {
+        const piece = board[i][j];
+        if (piece) {
+          totalValue += pieceValue[piece.type];
+        }
+      }
+    }
+    return totalValue;
   };
 
   // show possible moves
@@ -67,7 +103,7 @@ const App = () => {
     setHistory(game.history({ verbose: true }));
     setSquareStyles(squareStyling(history));
 
-    setTimeout(ai, 1000);
+    setTimeout(ai, 250);
   };
 
   const onMouseOverSquare = (square: Square) => {
