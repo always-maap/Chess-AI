@@ -1,18 +1,13 @@
-import { Chess, Square } from "chess.js";
-
+import { Chess, Square, ChessInstance, Move } from "chess.js";
 import Chessboard from "chessboardjsx";
-import { CSSProperties, useEffect, useState } from "react";
+import { CSSProperties, useState } from "react";
 
-const HumanVsHuman = () => {
-  const [game, setGame] = useState<any>();
+const App = () => {
+  const [game] = useState<ChessInstance>(() => new Chess());
   const [fen, setFen] = useState("start");
   const [squareStyles, setSquareStyles] =
     useState<{ [square in Square]?: CSSProperties }>();
-  const [history, setHistory] = useState([]);
-
-  useEffect(() => {
-    setGame(new Chess());
-  }, []);
+  const [history, setHistory] = useState<Move[]>([]);
 
   // show possible moves
   const highlightSquare = (
@@ -98,7 +93,7 @@ const HumanVsHuman = () => {
   );
 };
 
-export default HumanVsHuman;
+export default App;
 
 const squareStyling = (history: any) => {
   const targetSquare = history.length && history[history.length - 1].to;
