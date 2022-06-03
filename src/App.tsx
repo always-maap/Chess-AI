@@ -1,27 +1,18 @@
-import { Chess, Square, ChessInstance, Move } from "chess.js";
-import Chessboard from "chessboardjsx";
-import { useState } from "react";
-
-const pieceValue = {
-  p: 10, // pawn
-  n: 30, // knight
-  b: 30, // bishop
-  r: 50, // rook
-  q: 90, // queen
-  k: 900, // king
-};
+import { Chess, Square, ChessInstance, Move } from 'chess.js';
+import Chessboard from 'chessboardjsx';
+import { useState } from 'react';
+import { minimax } from './lib/minimax';
 
 const App = () => {
   const [game] = useState<ChessInstance>(() => new Chess());
-  const [fen, setFen] = useState("start");
-  const [squareStyles, setSquareStyles] =
-    useState<Chessboard["props"]["squareStyles"]>();
+  const [fen, setFen] = useState('start');
+  const [squareStyles, setSquareStyles] = useState<Chessboard['props']['squareStyles']>();
   const [history, setHistory] = useState<Move[]>([]);
 
   const ai = () => {
     const possibleMoves = game.moves();
-    let bestValue = -Infinity;
-    let bestMove = -1;
+    let bestMove = -Infinity;
+    let finalBestMove = -1;
 
     // game over
     if (possibleMoves.length === 0) return;
@@ -29,52 +20,32 @@ const App = () => {
     possibleMoves.forEach((_, i) => {
       game.move(possibleMoves[i]);
 
-      const boardValue = -getBoardValue();
+      const value = minimax(game, 2, -Infinity, Infinity, true);
       game.undo();
 
-      if (boardValue > bestValue) {
-        bestValue = boardValue;
-        bestMove = i;
+      if (value >= bestMove) {
+        bestMove = value;
+        finalBestMove = i;
       }
     });
 
-    game.move(possibleMoves[bestMove]);
+    game.move(possibleMoves[finalBestMove]);
     setFen(game.fen());
   };
 
-  const getBoardValue = () => {
-    let totalValue = 0;
-    const board = game.board();
-    for (let i = 0; i < 8; i++) {
-      for (let j = 0; j < 8; j++) {
-        const piece = board[i][j];
-        if (piece) {
-          totalValue += pieceValue[piece.type];
-        }
-      }
-    }
-    return totalValue;
-  };
-
   // show possible moves
-  const highlightSquare = (
-    sourceSquare: Square,
-    squaresToHighlight: Square[]
-  ) => {
-    const highlightStyles = [sourceSquare, ...squaresToHighlight].reduce(
-      (a, c) => {
-        return {
-          ...a,
-          ...{
-            [c]: {
-              background: "#fffc0030",
-            },
+  const highlightSquare = (sourceSquare: Square, squaresToHighlight: Square[]) => {
+    const highlightStyles = [sourceSquare, ...squaresToHighlight].reduce((a, c) => {
+      return {
+        ...a,
+        ...{
+          [c]: {
+            background: '#fffc0030',
           },
-          ...squareStyling(history),
-        };
-      },
-      {}
-    );
+        },
+        ...squareStyling(history),
+      };
+    }, {});
 
     setSquareStyles((prev) => ({ ...prev, ...highlightStyles }));
   };
@@ -83,18 +54,12 @@ const App = () => {
     setSquareStyles(squareStyling(history));
   };
 
-  const onDrop = ({
-    sourceSquare,
-    targetSquare,
-  }: {
-    sourceSquare: Square;
-    targetSquare: Square;
-  }) => {
+  const onDrop = ({ sourceSquare, targetSquare }: { sourceSquare: Square; targetSquare: Square }) => {
     // see if the move is legal
     let move = game.move({
       from: sourceSquare,
       to: targetSquare,
-      promotion: "q", // always promote to a queen for example simplicity
+      promotion: 'q', // always promote to a queen for example simplicity
     });
 
     // illegal move
@@ -103,7 +68,7 @@ const App = () => {
     setHistory(game.history({ verbose: true }));
     setSquareStyles(squareStyling(history));
 
-    setTimeout(ai, 250);
+    setTimeout(ai, 200);
   };
 
   const onMouseOverSquare = (square: Square) => {
@@ -135,7 +100,7 @@ const App = () => {
       onMouseOverSquare={onMouseOverSquare}
       onMouseOutSquare={onMouseOutSquare}
       boardStyle={{
-        borderRadius: "5px",
+        borderRadius: '5px',
       }}
       squareStyles={squareStyles}
     />
@@ -150,7 +115,7 @@ const squareStyling = (history: any) => {
   return {
     ...(history.length && {
       [targetSquare]: {
-        backgroundColor: "rgba(255, 255, 0, 0.4)",
+        backgroundColor: 'rgba(255, 255, 0, 0.4)',
       },
     }),
   };
